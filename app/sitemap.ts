@@ -1,96 +1,67 @@
 import type { MetadataRoute } from "next";
-import { allNews } from "@/data/newsData";
-import { youtubeVideos } from "@/data/youtubeVideos";
 import { SITE_URL } from "@/lib/site";
+import { getNewsItems } from "@/lib/newsService";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = SITE_URL.replace(/\/$/, "");
+
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: SITE_URL,
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: `${SITE_URL}/latest-news`,
+      url: `${baseUrl}/latest-news`,
       lastModified: new Date(),
-      changeFrequency: "daily",
+      changeFrequency: "hourly",
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/district-news`,
+      lastModified: new Date(),
+      changeFrequency: "hourly",
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/district-news`,
+      url: `${baseUrl}/education`,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 0.85,
     },
     {
-      url: `${SITE_URL}/education`,
+      url: `${baseUrl}/government-jobs`,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.8,
+      priority: 0.85,
     },
     {
-      url: `${SITE_URL}/government-jobs`,
+      url: `${baseUrl}/sarkari-yojana`,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 0.85,
     },
     {
-      url: `${SITE_URL}/sarkari-yojana`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/videos`,
+      url: `${baseUrl}/videos`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/search`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/privacy-policy`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
-    {
-      url: `${SITE_URL}/disclaimer`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
-    {
-      url: `${SITE_URL}/contact`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
     },
   ];
 
-  const newsRoutes: MetadataRoute.Sitemap = allNews.map((news) => ({
-    url: `${SITE_URL}/news/${news.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority:
-      news.priority === "High" || news.isBreaking
-        ? 0.9
-        : news.priority === "Medium"
-        ? 0.75
-        : 0.65,
+  const liveNews = await getNewsItems();
+
+  const newsRoutes: MetadataRoute.Sitemap = liveNews.map((news) => ({
+    url: `${baseUrl}/news/${news.slug}`,
+    lastModified: news.updatedAtMillis
+      ? new Date(news.updatedAtMillis)
+      : new Date(),
+    changeFrequency: "daily",
+    priority: news.isBreaking ? 0.9 : 0.75,
   }));
 
-  const videoRoutes: MetadataRoute.Sitemap = youtubeVideos.map((video) => ({
-    url: `${SITE_URL}/videos?watch=${video.slug}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: video.isFeatured ? 0.8 : 0.65,
-  }));
-
-  return [...staticRoutes, ...newsRoutes, ...videoRoutes];
+  return [...staticRoutes, ...newsRoutes];
 }
