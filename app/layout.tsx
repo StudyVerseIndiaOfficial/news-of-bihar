@@ -29,6 +29,10 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
   category: "news",
 
+  verification: {
+    google: "6h7WYA4SCgY1FWxvJKlx5gNug7OCZO2-_KEsVMdnLm8",
+  },
+
   alternates: {
     canonical: "/",
   },
@@ -92,6 +96,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
       "max-video-preview": -1,
     },
+  },
+
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
   },
 };
 
