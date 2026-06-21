@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline | News of Bihar</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f9fafb;
+        color: #111827;
+        display: flex;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .card {
+        max-width: 460px;
+        background: white;
+        border-radius: 28px;
+        padding: 28px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+      }
+
+      .logo {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 18px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, #7f1d1d, #f97316);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 22px;
+      }
+
+      h1 {
+        margin: 0;
+        color: #7f1d1d;
+        font-size: 28px;
+      }
+
+      p {
+        color: #4b5563;
+        line-height: 1.7;
+        font-weight: 700;
+      }
+
+      button {
+        margin-top: 12px;
+        border: 0;
+        border-radius: 16px;
+        background: #7f1d1d;
+        color: white;
+        font-weight: 900;
+        padding: 12px 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">NOB</div>
+      <h1>आप Offline हैं</h1>
+      <p>
+        इंटरनेट connection उपलब्ध नहीं है। कृपया connection check करें और फिर
+        page reload करें।
+      </p>
+      <button onclick="window.location.reload()">Reload करें</button>
+    </div>
+  </body>
+</html>
