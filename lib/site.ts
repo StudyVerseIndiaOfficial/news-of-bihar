@@ -1,10 +1,8 @@
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://news-of-bihar.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://news-of-bihar-web.vercel.app";
 
 export const SITE_NAME = "News of Bihar";
-
 export const SITE_TAGLINE = "सच बिहार का, आवाज जनता की";
-
 export const SITE_TITLE = "News of Bihar | सच बिहार का, आवाज जनता की";
 
 export const SITE_DESCRIPTION =
