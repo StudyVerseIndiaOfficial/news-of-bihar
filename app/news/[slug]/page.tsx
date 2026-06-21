@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getNewsItemBySlug, getNewsItems } from "@/lib/newsService";
+import { getNewsItems } from "@/lib/newsService";
 import NewsCard from "@/components/NewsCard";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +10,31 @@ type PageProps = {
   }>;
 };
 
+function normalizeSlug(value: string) {
+  try {
+    return decodeURIComponent(value).trim();
+  } catch {
+    return value.trim();
+  }
+}
+
+async function findLiveNews(slug: string) {
+  const allNews = await getNewsItems();
+  const cleanSlug = normalizeSlug(slug);
+
+  const news =
+    allNews.find((item) => item.slug === cleanSlug) ||
+    allNews.find((item) => normalizeSlug(item.slug) === cleanSlug);
+
+  return {
+    news: news || null,
+    allNews,
+  };
+}
+
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const news = await getNewsItemBySlug(slug);
+  const { news } = await findLiveNews(slug);
 
   if (!news) {
     return {
@@ -29,9 +51,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function NewsDetailPage({ params }: PageProps) {
   const { slug } = await params;
-
-  const news = await getNewsItemBySlug(slug);
-  const allNews = await getNewsItems();
+  const { news, allNews } = await findLiveNews(slug);
 
   if (!news) {
     return (
@@ -135,10 +155,8 @@ export default async function NewsDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            <div className="prose prose-red max-w-none">
-              <div className="whitespace-pre-wrap break-words text-base font-semibold leading-9 text-gray-800">
-                {news.content}
-              </div>
+            <div className="whitespace-pre-wrap break-words text-base font-semibold leading-9 text-gray-800">
+              {news.content}
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">

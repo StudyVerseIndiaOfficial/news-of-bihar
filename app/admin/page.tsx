@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  type User,
+} from "firebase/auth";
 import type { NewsItem, NewsPriority } from "@/data/newsData";
+import { auth } from "@/lib/firebase";
 import { getYouTubeThumbnail } from "@/lib/youtube";
 import {
   createNewsContent,
@@ -16,6 +23,8 @@ import {
   type AdminContentItem,
   type VideoContentInput,
 } from "@/lib/adminContentService";
+
+const ADMIN_EMAIL = "shyamjeer44@gmail.com";
 
 const newsCategories = [
   "Breaking",
@@ -171,8 +180,15 @@ function buildVideoDescription(title: string) {
 }
 
 export default function AdminPage() {
-  const [password, setPassword] = useState("");
+  const [adminUser, setAdminUser] = useState<User | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLogin, setIsLogin] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+
+  const [loginEmail, setLoginEmail] = useState(ADMIN_EMAIL);
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const [activeTab, setActiveTab] = useState<ActiveTab>("news");
 
   const [newsForm, setNewsForm] = useState<NewsForm>(emptyNewsForm());
@@ -213,18 +229,90 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const userEmail = user?.email?.toLowerCase() || "";
+      const allowedEmail = ADMIN_EMAIL.toLowerCase();
+
+      if (user && userEmail === allowedEmail) {
+        setAdminUser(user);
+        setIsLogin(true);
+        setLoginError("");
+      } else {
+        if (user) {
+          await signOut(auth);
+          setLoginError("यह email admin access के लिए allowed नहीं है।");
+        }
+
+        setAdminUser(null);
+        setIsLogin(false);
+      }
+
+      setIsCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (isLogin) {
       loadRecentItems();
     }
   }, [isLogin]);
 
-  const handleLogin = () => {
-    if (password === "admin123") {
-      setIsLogin(true);
+  const handleLogin = async () => {
+    try {
+      setLoginError("");
       setMessage("");
-    } else {
-      alert("गलत password");
+
+      const cleanEmail = loginEmail.trim().toLowerCase();
+
+      if (!cleanEmail) {
+        setLoginError("Email जरूरी है।");
+        return;
+      }
+
+      if (!loginPassword.trim()) {
+        setLoginError("Password जरूरी है।");
+        return;
+      }
+
+      if (cleanEmail !== ADMIN_EMAIL.toLowerCase()) {
+        setLoginError("इस email को admin access नहीं है।");
+        return;
+      }
+
+      setIsLoginLoading(true);
+
+      const result = await signInWithEmailAndPassword(
+        auth,
+        cleanEmail,
+        loginPassword
+      );
+
+      if (result.user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        await signOut(auth);
+        setLoginError("यह email admin access के लिए allowed नहीं है।");
+        return;
+      }
+
+      setLoginPassword("");
+      setLoginError("");
+    } catch (error) {
+      console.error(error);
+      setLoginError(
+        "Login failed. Email/password check करें या Firebase Authentication में user बनाया है या नहीं देखें।"
+      );
+    } finally {
+      setIsLoginLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setAdminUser(null);
+    setIsLogin(false);
+    setMessage("");
+    setRecentItems([]);
   };
 
   const clearNewsForm = () => {
@@ -435,14 +523,18 @@ export default function AdminPage() {
         }
 
         await createVideoContent(payload);
-        setMessage("✅ YouTube video live publish हो गया और recent list में top पर आ गया।");
+        setMessage(
+          "✅ YouTube video live publish हो गया और recent list में top पर आ गया।"
+        );
       }
 
       clearVideoForm();
       await loadRecentItems();
     } catch (error) {
       console.error(error);
-      setMessage("❌ Video save नहीं हुआ। YouTube link, Firestore Rules और internet check करें।");
+      setMessage(
+        "❌ Video save नहीं हुआ। YouTube link, Firestore Rules और internet check करें।"
+      );
     } finally {
       setIsSaving(false);
     }
@@ -493,7 +585,9 @@ export default function AdminPage() {
         tags: tagsToString(item.tags),
       });
 
-      setMessage("✍️ Video edit mode खुल गया। नया link डालकर Sync करें या Update Video दबाएँ।");
+      setMessage(
+        "✍️ Video edit mode खुल गया। नया link डालकर Sync करें या Update Video दबाएँ।"
+      );
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -534,22 +628,63 @@ export default function AdminPage() {
       : videoForm.description ||
         "YouTube link से details sync करने पर description यहाँ दिखेगा";
 
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="rounded-3xl bg-white p-6 text-center shadow-md">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl">
+            🔐
+          </div>
+          <h1 className="text-xl font-black text-red-900">
+            Admin session check हो रहा है...
+          </h1>
+          <p className="mt-2 text-sm font-bold text-gray-500">
+            कृपया कुछ सेकंड wait करें।
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isLogin) {
     return (
       <div className="min-h-screen overflow-x-hidden bg-gray-50 px-3 py-10 sm:px-4">
         <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-5 shadow-md sm:p-6">
           <div className="mb-5 rounded-3xl bg-gradient-to-br from-red-900 to-orange-600 p-5 text-white">
-            <h1 className="break-words text-3xl font-black">Admin Login</h1>
+            <h1 className="break-words text-3xl font-black">
+              Secure Admin Login
+            </h1>
             <p className="mt-2 break-words text-sm font-semibold leading-6 text-red-50">
-              News of Bihar admin panel में जाने के लिए password डालें।
+              News of Bihar admin panel में जाने के लिए registered admin email
+              और password डालें।
             </p>
           </div>
 
+          {loginError && (
+            <div className="mb-4 rounded-2xl border border-red-100 bg-red-50 p-3 text-sm font-black leading-6 text-red-800">
+              {loginError}
+            </div>
+          )}
+
+          <label className="mb-2 block text-sm font-black text-gray-700">
+            Admin Email
+          </label>
+          <input
+            type="email"
+            placeholder="shyamjeer44@gmail.com"
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            className={inputClass()}
+          />
+
+          <label className="mb-2 mt-4 block text-sm font-black text-gray-700">
+            Admin Password
+          </label>
           <input
             type="password"
-            placeholder="Admin password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Firebase Authentication वाला password"
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleLogin();
             }}
@@ -558,15 +693,19 @@ export default function AdminPage() {
 
           <button
             onClick={handleLogin}
-            className="mt-4 w-full rounded-2xl bg-red-800 px-4 py-3 text-sm font-black text-white"
+            disabled={isLoginLoading}
+            className="mt-4 w-full rounded-2xl bg-red-800 px-4 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Login
+            {isLoginLoading ? "Login हो रहा है..." : "Login"}
           </button>
 
           <p className="mt-4 rounded-2xl bg-yellow-50 p-3 text-xs font-bold leading-5 text-yellow-900">
-            Demo Password: admin123
+            Access सिर्फ इस email पर allowed है:
             <br />
-            बाद में इसे secure admin login से और मजबूत करेंगे।
+            {ADMIN_EMAIL}
+            <br />
+            Password वही डालना है जो Firebase Authentication में user बनाते समय
+            बनाया गया है।
           </p>
         </div>
       </div>
@@ -605,6 +744,17 @@ export default function AdminPage() {
             >
               Refresh Recent
             </button>
+
+            <button
+              onClick={handleLogout}
+              className="rounded-2xl border border-white/40 bg-black/20 px-4 py-3 text-xs font-black text-white"
+            >
+              Logout
+            </button>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-white/10 p-3 text-xs font-black leading-5 text-white">
+            Logged in as: {adminUser?.email || ADMIN_EMAIL}
           </div>
         </div>
 
@@ -1205,9 +1355,7 @@ export default function AdminPage() {
                         <span className="break-words">
                           📍 {newsForm.district}
                         </span>
-                        <span className="break-words">
-                          🗓️ {newsForm.date}
-                        </span>
+                        <span className="break-words">🗓️ {newsForm.date}</span>
                         <span className="break-words">
                           📰 {newsForm.source}
                         </span>
@@ -1215,9 +1363,7 @@ export default function AdminPage() {
                     ) : (
                       <>
                         <span className="break-words">▶️ YouTube Video</span>
-                        <span className="break-words">
-                          🗓️ {videoForm.date}
-                        </span>
+                        <span className="break-words">🗓️ {videoForm.date}</span>
                         <span className="break-words">
                           📰 {videoForm.source}
                         </span>
