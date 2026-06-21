@@ -1,5 +1,5 @@
 "use client";
-
+import PremiumFooter from "@/components/PremiumFooter";
 import { usePathname } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -17,7 +17,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <>
       <Header />
       <main className="min-h-screen">{children}</main>
-      <Footer />
+     <PremiumFooter />
       <BottomNav />
     </>
   );
