@@ -14,8 +14,6 @@ const menuLinks = [
   { name: "Privacy Policy", href: "/privacy-policy" },
   { name: "Disclaimer", href: "/disclaimer" },
   { name: "Contact", href: "/contact" },
-  { name: "Admin News", href: "/admin" },
-  { name: "Admin Videos", href: "/admin/videos" },
 ];
 
 export default function Header() {
