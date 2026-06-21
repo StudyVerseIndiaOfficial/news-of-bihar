@@ -24,7 +24,7 @@ import {
   type VideoContentInput,
 } from "@/lib/adminContentService";
 
-const ADMIN_EMAIL = "shyamjeer44@gmail.com";
+const ADMIN_EMAIL = "sarswatidigitalnews@gmail.com";
 
 const newsCategories = [
   "Breaking",
