@@ -6,17 +6,12 @@ export const dynamic = "force-dynamic";
 export default async function DistrictNewsPage() {
   const liveNews = await getNewsItems();
 
-  const districtNews = liveNews.filter(
-    (item) => item.category === "District News"
-  );
-
   return (
     <NewsExplorer
-      news={districtNews}
-      title="District Wise News"
-      subtitle="बिहार के हर जिले की आवाज — हर गाँव, हर शहर और हर नागरिक की खबर।"
-      lockedCategory="District News"
-      badgeText="District Updates"
+      news={liveNews}
+      title="District News"
+      subtitle="बिहार के सभी जिलों की ताजा खबरें, स्थानीय अपडेट, प्रशासनिक सूचना और जनता से जुड़ी जरूरी जानकारी यहाँ आसानी से खोजें।"
+      badgeText="All Bihar District Updates"
     />
   );
 }
