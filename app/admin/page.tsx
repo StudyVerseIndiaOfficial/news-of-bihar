@@ -1,5 +1,5 @@
-import { parseSmartNewsInput } from "@/lib/smartNewsParser";
 "use client";
+import { parseSmartNewsInput } from "@/lib/smartNewsParser";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
