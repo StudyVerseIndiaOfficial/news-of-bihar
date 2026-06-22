@@ -1,3 +1,4 @@
+import { parseSmartNewsInput } from "@/lib/smartNewsParser";
 "use client";
 
 import Link from "next/link";
@@ -202,6 +203,8 @@ export default function AdminPage() {
   const [isSyncingVideo, setIsSyncingVideo] = useState(false);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   const [message, setMessage] = useState("");
+  const [smartNewsText, setSmartNewsText] = useState("");
+const [showSmartGuide, setShowSmartGuide] = useState(false);
 
   const autoNewsSlug = useMemo(
     () => createSlug(newsForm.title),
@@ -320,6 +323,38 @@ export default function AdminPage() {
     setEditingNewsId("");
     setMessage("");
   };
+  const applySmartNewsAutoFill = () => {
+  if (!smartNewsText.trim()) {
+    alert("पहले Smart News Box में पूरा material paste करें");
+    return;
+  }
+
+  const parsed = parseSmartNewsInput(smartNewsText);
+
+  if (!parsed.title || !parsed.content) {
+    alert("Material से title/content समझ नहीं आया। Format check करें।");
+    return;
+  }
+
+  setNewsForm((prev) => ({
+    ...prev,
+    title: parsed.title || prev.title,
+    slug: prev.slug.trim() ? prev.slug : createSlug(parsed.title),
+    category: parsed.category || prev.category,
+    district: parsed.district || prev.district,
+    description: parsed.description || prev.description,
+    officialLink: parsed.officialLink || prev.officialLink,
+    sourceLink: parsed.sourceLink || prev.sourceLink,
+    imageTitle: parsed.imageTitle || prev.imageTitle,
+    imageUrl: parsed.imageUrl || prev.imageUrl,
+    tags: parsed.tags || prev.tags,
+    content: parsed.content || prev.content,
+    priority: parsed.category === "Breaking" ? "High" : prev.priority,
+    isBreaking: parsed.category === "Breaking" ? true : prev.isBreaking,
+  }));
+
+  setMessage("✅ Smart Auto Fill complete हो गया। अब fields check करके Publish करें।");
+};
 
   const clearVideoForm = () => {
     setVideoForm(emptyVideoForm());
@@ -795,6 +830,85 @@ export default function AdminPage() {
                 <h2 className="mb-5 break-words text-2xl font-black text-red-900">
                   {editingNewsId ? "Edit News Material" : "Add New Live News"}
                 </h2>
+                <div className="mb-5 overflow-hidden rounded-[2rem] border border-red-100 bg-gradient-to-br from-red-50 via-white to-orange-50 p-4 shadow-md">
+  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p className="inline-block rounded-full bg-red-800 px-3 py-1 text-xs font-black text-white">
+        Smart Auto Fill
+      </p>
+
+      <h3 className="mt-2 break-words text-xl font-black text-red-950">
+        Smart News Upload System
+      </h3>
+
+      <p className="mt-1 break-words text-xs font-bold leading-5 text-gray-600">
+        पूरा news material paste करें, फिर title, category, district,
+        description, tags और full content auto fill हो जाएगा।
+      </p>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => setShowSmartGuide(!showSmartGuide)}
+      className="rounded-2xl bg-gray-900 px-4 py-3 text-xs font-black text-white"
+    >
+      {showSmartGuide ? "Guide Hide" : "Format Guide"}
+    </button>
+  </div>
+
+  {showSmartGuide && (
+    <div className="mb-4 rounded-3xl border border-yellow-200 bg-yellow-50 p-4 text-xs font-bold leading-6 text-yellow-900">
+      <p className="mb-2 font-black">Recommended Format:</p>
+      <pre className="whitespace-pre-wrap break-words rounded-2xl bg-white p-3 text-[11px] leading-5 text-gray-800">
+{`Title: बिहार में नई योजना की शुरुआत
+Category: Sarkari Yojana
+District: Patna
+Short Description: बिहार सरकार ने नई योजना को लेकर जरूरी जानकारी जारी की है।
+Tags: Bihar News, Sarkari Yojana, Patna
+Official Link: https://official-website.com
+
+Content:
+# बिहार में नई योजना की शुरुआत
+
+## क्या है पूरी जानकारी?
+
+यहाँ पूरी खबर साफ भाषा में लिखें।
+
+- पहला जरूरी point
+- दूसरा जरूरी point
+- तीसरा जरूरी point
+
+! official website से जानकारी जरूर check करें।`}
+      </pre>
+    </div>
+  )}
+
+  <textarea
+    placeholder="यहाँ पूरा news material paste करें..."
+    value={smartNewsText}
+    onChange={(e) => setSmartNewsText(e.target.value)}
+    className="min-h-52 w-full resize-y rounded-[1.5rem] border border-red-100 bg-white px-4 py-4 text-sm font-bold leading-7 outline-none focus:border-red-500"
+    style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+  />
+
+  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+    <button
+      type="button"
+      onClick={applySmartNewsAutoFill}
+      className="rounded-2xl bg-red-800 px-4 py-4 text-sm font-black text-white shadow-lg hover:bg-red-900"
+    >
+      ✨ Auto Fill News Details
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setSmartNewsText("")}
+      className="rounded-2xl border border-red-200 bg-white px-4 py-4 text-sm font-black text-red-800"
+    >
+      Clear Smart Box
+    </button>
+  </div>
+</div>
 
                 <div className="grid min-w-0 gap-4 md:grid-cols-2">
                   <div className="min-w-0">
