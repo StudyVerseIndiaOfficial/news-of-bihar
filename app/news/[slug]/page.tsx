@@ -1,3 +1,4 @@
+import NewsContentRenderer from "@/components/NewsContentRenderer";
 import Link from "next/link";
 import { getNewsItems } from "@/lib/newsService";
 import NewsCard from "@/components/NewsCard";
@@ -155,10 +156,7 @@ export default async function NewsDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            <div className="whitespace-pre-wrap break-words text-base font-semibold leading-9 text-gray-800">
-              {news.content}
-            </div>
-
+           <NewsContentRenderer content={news.content} />
             <div className="mt-8 flex flex-wrap gap-3">
               {news.officialLink && (
                 <a
